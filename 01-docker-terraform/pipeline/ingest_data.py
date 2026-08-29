@@ -34,6 +34,13 @@ dtype = {
     "congestion_surcharge": "float64"
 }
 
+dtype2 = {
+    "LocationID":      "Int64",
+    "Borough":           "string",
+    "Zone":              "string",
+    "service_zone":      "string",
+}
+
 parse_dates = [
     "tpep_pickup_datetime",
     "tpep_dropoff_datetime"
@@ -64,8 +71,9 @@ def fast_pg_insert(df, table_name, raw_conn):
 @click.option('--chunksize', default=100000, type=int, help='Chunk size for reading CSV')
 def run(pg_user, pg_pass, pg_host, pg_port, pg_db, year, month, target_table, chunksize):
     """Ingest NYC taxi data into PostgreSQL database using fast COPY protocol."""
-    prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow'
-    url = f'{prefix}/yellow_tripdata_{year}-{month:02d}.csv.gz'
+    # prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow'
+    # url = f'{prefix}/yellow_tripdata_{year}-{month:02d}.csv.gz'
+    url = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv'
 
     click.echo(f"Connecting to database {pg_db} at {pg_host}:{pg_port}...")
     engine = create_engine(f'postgresql+psycopg2://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}')
@@ -74,7 +82,7 @@ def run(pg_user, pg_pass, pg_host, pg_port, pg_db, year, month, target_table, ch
     df_iter = pd.read_csv(
         url,
         dtype=dtype,
-        parse_dates=parse_dates,
+        # parse_dates=parse_dates,
         iterator=True,
         chunksize=chunksize,
     )
