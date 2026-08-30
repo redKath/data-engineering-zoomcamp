@@ -14,6 +14,7 @@ import click
 import pandas as pd
 from sqlalchemy import create_engine
 from tqdm.auto import tqdm
+import pyarrow.parquet as pq
 
 dtype = {
     "VendorID": "Int64",
@@ -73,20 +74,24 @@ def run(pg_user, pg_pass, pg_host, pg_port, pg_db, year, month, target_table, ch
     """Ingest NYC taxi data into PostgreSQL database using fast COPY protocol."""
     # prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow'
     # url = f'{prefix}/yellow_tripdata_{year}-{month:02d}.csv.gz'
-    url = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv'
+    # url = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv'
+    url = 'green_tripdata_2025-11.parquet'
+    click.echo(f"\will insert data from '{url}'...")
 
     click.echo(f"Connecting to database {pg_db} at {pg_host}:{pg_port}...")
     engine = create_engine(f'postgresql+psycopg2://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}')
 
     click.echo(f"Downloading stream from {url}...")
-    df_iter = pd.read_csv(
-        url,
-        dtype=dtype,
-        # parse_dates=parse_dates,
-        iterator=True,
-        chunksize=chunksize,
-    )
-
+    # df_iter = pd.read_csv(
+    #     url,
+    #     dtype=dtype,
+    #     # parse_dates=parse_dates,
+    #     iterator=True,
+    #     chunksize=chunksize,
+    # )
+    parquet_file = pq.ParquetFile(url)
+    df_iter = (batch.to_pandas() for batch in parquet_file.iter_batches(batch_size=chunksize))
+    
     first = True
     raw_conn = engine.raw_connection()
 

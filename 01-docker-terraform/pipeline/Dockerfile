@@ -10,6 +10,7 @@ COPY pyproject.toml .python-version uv.lock README.md ./
 COPY src ./src
 RUN uv sync --locked 
 
+COPY green_tripdata_2025-11.parquet .
 COPY ingest_data.py .
 
 ENTRYPOINT [ "python", "ingest_data.py" ]
