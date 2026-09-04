@@ -1,6 +1,7 @@
 *.parquet
 my-creds.json
 *.csv
+kestra-sandbox*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
